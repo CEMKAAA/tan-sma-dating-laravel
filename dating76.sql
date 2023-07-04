@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.7.7
+-- version 4.9.0.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: May 10, 2019 at 05:11 PM
--- Server version: 10.1.30-MariaDB
--- PHP Version: 7.2.2
+-- Host: localhost
+-- Generation Time: Oct 24, 2020 at 04:59 PM
+-- Server version: 10.4.6-MariaDB
+-- PHP Version: 7.3.9
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -34,7 +34,7 @@ CREATE TABLE `admins` (
   `password` varchar(255) NOT NULL,
   `status` tinyint(4) NOT NULL,
   `created_at` datetime NOT NULL,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
@@ -43,6 +43,37 @@ CREATE TABLE `admins` (
 
 INSERT INTO `admins` (`id`, `username`, `password`, `status`, `created_at`, `updated_at`) VALUES
 (1, 'admin', 'e10adc3949ba59abbe56e057f20f883e', 1, '2019-01-17 00:00:00', '2019-01-21 10:25:48');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `chat_messages`
+--
+
+CREATE TABLE `chat_messages` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `sender_username` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `chat_messages`
+--
+
+INSERT INTO `chat_messages` (`id`, `sender_username`, `message`, `read`, `created_at`, `updated_at`) VALUES
+(1, 'amit1000', 'hello', 1, '2019-08-21 09:31:23', '2019-08-21 09:31:26'),
+(2, 'john', 'hello', 1, '2019-08-21 09:32:04', '2019-08-21 09:32:07'),
+(3, 'amit1000', 'hello', 1, '2019-08-21 09:33:30', '2019-08-21 09:33:33'),
+(4, 'john', 'hello', 1, '2019-08-21 09:33:50', '2019-08-21 09:33:51'),
+(5, 'john', 'how are you?', 1, '2019-08-21 09:34:18', '2019-08-21 09:34:19'),
+(6, 'amit1000', 'fine', 1, '2019-08-21 09:34:43', '2019-08-21 09:34:44'),
+(7, 'amit1000', 'hello', 1, '2019-08-21 09:40:54', '2019-08-21 09:40:56'),
+(8, 'amit1000', 'hello', 1, '2019-08-21 09:45:51', '2019-08-21 09:47:22'),
+(9, 'amit1000', 'hello', 1, '2019-08-21 09:48:13', '2019-08-21 09:48:16'),
+(10, 'john', 'hello how are you', 1, '2019-08-21 09:48:43', '2019-08-21 09:48:45');
 
 -- --------------------------------------------------------
 
@@ -310,6 +341,51 @@ INSERT INTO `countries` (`id`, `code`, `name`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `favorites`
+--
+
+CREATE TABLE `favorites` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `favorite_id` int(11) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `favorites`
+--
+
+INSERT INTO `favorites` (`id`, `user_id`, `favorite_id`, `created_at`, `updated_at`) VALUES
+(5, 4, 2, '2019-10-26 21:11:29', '2019-10-26 21:11:29'),
+(6, 4, 3, '2019-11-02 21:28:58', '2019-11-02 21:28:58'),
+(7, 3, 2, '2019-11-02 21:38:27', '2019-11-02 21:38:27');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `friends`
+--
+
+CREATE TABLE `friends` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `friend_id` int(11) NOT NULL,
+  `accept` tinyint(4) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `friends`
+--
+
+INSERT INTO `friends` (`id`, `user_id`, `friend_id`, `accept`, `created_at`, `updated_at`) VALUES
+(1, 2, 4, 0, '2019-08-09 17:15:23', '2019-08-09 11:45:23');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `hobbies`
 --
 
@@ -503,6 +579,7 @@ CREATE TABLE `migrations` (
 --
 
 INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
+(0, '2019_08_20_144130_create_chat_messages_table', 5),
 (1, '2014_10_12_000000_create_users_table', 1),
 (2, '2014_10_12_100000_create_password_resets_table', 1),
 (3, '2018_03_18_121109_create_category_table', 2),
@@ -532,7 +609,7 @@ CREATE TABLE `responses` (
   `sender_id` int(11) NOT NULL,
   `receiver_id` int(11) NOT NULL,
   `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `seen` tinyint(4) NOT NULL DEFAULT '0',
+  `seen` tinyint(4) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -547,9 +624,9 @@ INSERT INTO `responses` (`id`, `sender_id`, `receiver_id`, `message`, `seen`, `c
 (3, 2, 3, 'hi', 1, '2019-03-14 09:49:17', '2019-04-30 08:34:38'),
 (4, 2, 3, 'hi how are you?', 1, '2019-03-20 21:19:54', '2019-04-30 08:39:23'),
 (5, 4, 3, 'hi want to become your friend', 1, '2019-03-20 21:52:08', '2019-04-20 21:44:43'),
-(7, 3, 4, 'hiiii', 0, '2019-03-27 10:44:15', '2019-03-27 10:44:15'),
+(7, 3, 4, 'hiiii', 1, '2019-03-27 10:44:15', '2019-06-04 09:50:39'),
 (9, 2, 3, 'hi steve i am fine too.. \r\n\r\n-------- steve wrote:\r\nhi i am fine', 0, '2019-04-07 04:27:24', '2019-04-30 08:20:42'),
-(10, 3, 2, 'hi amit can u meet me some day?\r\n\r\n-------- amit1000 wrote:\r\nhi steve i am fine too.. \r\n\r\n-------- steve wrote:\r\nhi i am fine', 1, '2019-04-07 04:31:26', '2019-04-30 08:19:39'),
+(10, 3, 2, 'hi amit can u meet me some day?\r\n\r\n-------- amit1000 wrote:\r\nhi steve i am fine too.. \r\n\r\n-------- steve wrote:\r\nhi i am fine', 1, '2019-04-07 04:31:26', '2019-05-12 08:40:41'),
 (11, 2, 3, 'hello steve what are you doing these days', 1, '2019-04-20 21:01:26', '2019-04-30 08:39:40');
 
 -- --------------------------------------------------------
@@ -564,7 +641,8 @@ CREATE TABLE `users` (
   `name` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `admin` tinyint(1) DEFAULT '0',
+  `admin` tinyint(1) DEFAULT 0,
+  `user_is_typing` tinyint(1) NOT NULL,
   `remember_token` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -574,11 +652,11 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `name`, `email`, `password`, `admin`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'Admin', 'admin@admin.com', '$2y$10$BGuO4f8GghmkV2eAvVXuxe76T7.Q/6Ojj6UmSsm3mxx1OKx5DPHPi', 1, 'lxvJoHmQr3ps2kAkVxPj8d3Ts3rN9xWEO4MzUKLqHZVqgThnEmQl5ZCntFey', '2018-12-13 11:45:58', '2018-12-13 11:45:58'),
-(2, 'amit1000', 'Amit Gupta', 'amit1000@yopmail.com', '$2y$10$UNGRo8N6r8pjOzHKjCB/2u.IfQ2NflXsva7vqFUhX68j2om5pdlt.', 0, '4QNBt98RbCXDEKN2PogtoWGzKQT7MYCMJebGQEFnAJdKreL5HglsHMpH5xCh', '2018-12-19 10:06:07', '2018-12-19 10:06:07'),
-(3, 'steve', 'Steve', 'steve100@yopmail.com', '$2y$10$C9o9.MX.9avOEJZ.XCTxIuHgrHOmAuG46rWY/2tyEHrhMYNH1shCW', 0, 'P2IzVIoeTNibd5yl0R6PjffdKKzQh4EOJVvHyTV8EIqMAc4STyOPhElkhBDf', '2019-01-02 09:44:22', '2019-01-02 09:44:22'),
-(4, 'john', 'John', 'john@yopmail.com', '$2y$10$Ls37Ye5eNRmMshK/3Fr0k.I0BVaU7ZcUswjONZWbW8eDydGiZLfJa', 0, NULL, '2019-03-20 21:46:56', '2019-03-20 21:46:56');
+INSERT INTO `users` (`id`, `username`, `name`, `email`, `password`, `admin`, `user_is_typing`, `remember_token`, `created_at`, `updated_at`) VALUES
+(1, 'admin', 'Admin', 'admin@admin.com', '$2y$10$BGuO4f8GghmkV2eAvVXuxe76T7.Q/6Ojj6UmSsm3mxx1OKx5DPHPi', 1, 0, 'lxvJoHmQr3ps2kAkVxPj8d3Ts3rN9xWEO4MzUKLqHZVqgThnEmQl5ZCntFey', '2018-12-13 11:45:58', '2018-12-13 11:45:58'),
+(2, 'amit1000', 'Amit Gupta', 'amit1000@yopmail.com', '$2y$10$UNGRo8N6r8pjOzHKjCB/2u.IfQ2NflXsva7vqFUhX68j2om5pdlt.', 0, 0, 'uPGycr7lIZudGDd3GeG4T5nspvqYAu8YUMwi547sH92OSCZlIwatHx9LpdcT', '2018-12-19 10:06:07', '2019-08-21 09:50:54'),
+(3, 'steve', 'Steve', 'steve100@yopmail.com', '$2y$10$C9o9.MX.9avOEJZ.XCTxIuHgrHOmAuG46rWY/2tyEHrhMYNH1shCW', 0, 0, 'o87AO8YUjbf6b0jboxearvxVOiadwbnH2emmTsGiRiosed3fuRvWIkAawfZZ', '2019-01-02 09:44:22', '2019-01-02 09:44:22'),
+(4, 'john', 'John', 'john@yopmail.com', '$2y$10$Ls37Ye5eNRmMshK/3Fr0k.I0BVaU7ZcUswjONZWbW8eDydGiZLfJa', 0, 0, NULL, '2019-03-20 21:46:56', '2019-08-21 09:50:52');
 
 -- --------------------------------------------------------
 
@@ -606,7 +684,7 @@ CREATE TABLE `users_details` (
   `income` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
   `about_myself` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `about_partner` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` tinyint(4) NOT NULL DEFAULT '0',
+  `status` tinyint(4) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -633,8 +711,8 @@ CREATE TABLE `users_photos` (
   `username` varchar(255) NOT NULL,
   `photo` varchar(255) NOT NULL,
   `default_photo` varchar(10) NOT NULL DEFAULT 'No',
-  `status` tinyint(4) NOT NULL DEFAULT '0',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `status` tinyint(4) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
@@ -661,9 +739,27 @@ ALTER TABLE `admins`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `chat_messages`
+--
+ALTER TABLE `chat_messages`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `countries`
 --
 ALTER TABLE `countries`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `favorites`
+--
+ALTER TABLE `favorites`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `friends`
+--
+ALTER TABLE `friends`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -726,10 +822,28 @@ ALTER TABLE `admins`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `chat_messages`
+--
+ALTER TABLE `chat_messages`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
 -- AUTO_INCREMENT for table `countries`
 --
 ALTER TABLE `countries`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=246;
+
+--
+-- AUTO_INCREMENT for table `favorites`
+--
+ALTER TABLE `favorites`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `friends`
+--
+ALTER TABLE `friends`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `hobbies`

@@ -4,6 +4,8 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Cache;
+use Auth;
 
 class User extends Authenticatable
 {
@@ -58,5 +60,14 @@ class User extends Authenticatable
     public static function getUsername($user_id){
         $getUsername = User::select('username')->where('id',$user_id)->first();
         return $getUsername->username;
+    }
+
+    public static function getUserId($username){
+        $getUserId = User::select('id')->where('username',$username)->first();
+        return $getUserId->id;
+    }
+
+    public static function isOnline($user_id){
+        return Cache::has('user-is-online-'.$user_id);
     }
 }

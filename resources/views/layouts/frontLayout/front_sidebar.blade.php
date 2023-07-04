@@ -2,7 +2,11 @@
 use App\User; 
 use App\Country;
 use App\Response;
-$datingCount = User::datingProfileExists(Auth::User()['id']);
+if(Auth::check()){
+    $datingCount = User::datingProfileExists(Auth::User()['id']);
+}else{
+    $datingCount = 0;    
+}
 if($datingCount==1){
     $datingCountText = "My Dating Profile";
 } else {
@@ -64,6 +68,8 @@ if($datingCount==1){
                         <p class="link"><a href="{{ url('/step/3') }}">My Photos</a></p>
                     @endif
                     <p class="link"><a href="{{ url('/responses') }}">Responses (<span class="newResponsesCount">{{ Response::newResponsesCount() }}</span>)</a></p>
+                    <p class="link"><a href="{{ url('/friends-requests') }}">Friends Requests</a></p>
+                    <p class="link"><a href="{{ url('/friends') }}">Friends</a></p>
                     <p class="link"><a href="{{ url('/sent-messages') }}">Sent Messages</a></p>
                     <p class="link"><a href="{{ url('/logout') }}">Logout</a></p>
                 </div>
@@ -134,11 +140,12 @@ if($datingCount==1){
         </div>
     </div>
     <div class="dating_news">
-        <h2>dating news </h2>
+        <h2>Chat Room </h2>
+        @if(Auth::check() && $datingCount==1)
+            <h3><a target="_blank" href="{{ url('chat/'.Auth::User()['username']) }}">Live Chat Room</a></h3>
+        @endif
         <div class="news_detail">
-            <p class="date">18th January, ‘09</p>
-            <p class="detail">Nunc viverra. Aliquam suscipit egestas turpis. Aenean mollis est. Sed feugiat, nulla sit amet dictum aliquam, massa leo elementum risus, sed gravida felis erat ut libero. Integer sem nisi, adipiscing non, sagittis eget, hendrerit non, nisi. Aliquam ante.</p>
-            <p class="know_more"><a href="#">know more...</a></p>
+            <iframe src="https://www6.cbox.ws/box/?boxid=829090&boxtag=0L66FR" width="100%" height="450" allowtransparency="yes" allow="autoplay" frameborder="0" marginheight="0" marginwidth="0" scrolling="auto"></iframe>      
         </div>
         <div class="news_detail">
             <p class="date">20th January, ‘09</p>

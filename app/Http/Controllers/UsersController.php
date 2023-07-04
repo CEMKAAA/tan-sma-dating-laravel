@@ -16,6 +16,9 @@ use File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use App\Response;
+use App\Friend;
+use Cache;
+use App\Favorite;
 
 class UsersController extends Controller
 {
@@ -211,7 +214,13 @@ class UsersController extends Controller
                 if (preg_match("/contact/i", Session::get('current_url'))) {
                     Session::put('frontSession',$data['username']);
                     return redirect(Session::get('current_url'));
-                } else {
+                } else if (preg_match("/add-new-friend/i", Session::get('current_url'))) {
+                    Session::put('frontSession',$data['username']);
+                    return redirect(Session::get('current_url'));
+                } else if (preg_match("/add-new-favorite/i", Session::get('current_url'))) {
+                    Session::put('frontSession',$data['username']);
+                    return redirect(Session::get('current_url'));
+                }else {
                     Session::put('frontSession',$data['username']);
                     return redirect('/step/2');
                 }
@@ -223,6 +232,7 @@ class UsersController extends Controller
     }
 
     public function logout(){
+        Cache::flush();
         Auth::logout();
         Session::forget('frontSession');
         Session::forget('current_url');
@@ -282,10 +292,91 @@ class UsersController extends Controller
             $userDetails = User::with('details')->with('photos')->where('username',$username)->first();
             $userDetails = json_decode(json_encode($userDetails));
             /*echo "<pre>"; print_r($userDetails); die;*/
+            if(Auth::check()){
+                // Check the user is friend or not
+                $user_id = Auth::user()->id;
+                $friend_id = User::getUserId($username);
+                $friendCount = Friend::where(['user_id'=>$user_id,'friend_id'=>$friend_id])->count();
+                if($friendCount>0){
+                    $friendDetails = Friend::where(['user_id'=>$user_id,'friend_id'=>$friend_id])->first();
+                    /*$friendDetails = json_decode(json_encode($friendDetails));
+                    echo "<pre>"; print_r($friendDetails); die;*/
+                    if($friendDetails->accept==1){
+                        $friendrequest = "Unfriend";
+                    }else{
+                        $friendrequest = "Friend Request Sent";
+                    }
+                }else{
+                    $friendRequestCount = Friend::where(['friend_id'=>$user_id,'user_id'=>$friend_id])->count();
+                    if($friendRequestCount>0){
+                        $friendRequest = Friend::where(['friend_id'=>$user_id,'user_id'=>$friend_id])->first();
+                        if($friendRequest->accept == 1){
+                            $friendrequest = "Unfriend";
+                        }else{
+                            $friendrequest = "Confirm Friend Request";
+                        }
+                    }else{
+                        $friendrequest = "Add Friend";
+                    }
+                }
+            }else{
+                $friendrequest = "";
+            }
+
+            if(Auth::check()){
+                $user_id = Auth::user()->id;
+                $favorite_id = User::getUserId($username);
+                
+                // Check if already favorite 
+                $favoriteCount = Favorite::where(['favorite_id'=>$favorite_id,'user_id'=>$user_id])->count();
+                if($favoriteCount>0){
+                    $favorite = "Favorite Profile";
+                }else{
+                    $favorite = "Add Favorite";   
+                }
+
+            }else{
+                $favorite = "Add Favorite";
+            }
+
         }else{
             abort(404);    
         } 
-        return view('users.profile')->with(compact('userDetails'));
+
+        // User Friends List
+        $friend_id = User::getUserId($username);
+        $friendsCount1 = Friend::where(['friend_id'=>$friend_id,'accept'=>1])->count();
+        $friend_ids1 = array();
+        if($friendsCount1>0){
+            $friend_ids1 = Friend::select('user_id')->where(['friend_id'=>$friend_id,'accept'=>1])->get();
+            $friend_ids1 = array_flatten(json_decode(json_encode($friend_ids1),true));
+            /*echo "<pre>"; print_r($friend_ids1);*/
+        }
+        $friendsCount2 = Friend::where(['user_id'=>$friend_id,'accept'=>1])->count();
+        $friend_ids2 = array();
+        if($friendsCount2>0){
+            $friend_ids2 = Friend::select('friend_id')->where(['user_id'=>$friend_id,'accept'=>1])->get();
+            $friend_ids2 = array_flatten(json_decode(json_encode($friend_ids2),true));
+            /*echo "<pre>"; print_r($friend_ids2); die;*/
+        }
+        $friends_ids = array();
+        $friends_ids = array_merge($friend_ids1,$friend_ids2);
+        /*echo "<pre>"; print_r($friends_ids); die;*/
+
+        $friendsList = User::with('details')->with('photos')->whereIn('id',$friends_ids)->orderBy('id','Desc')->get();
+        $friendsList = json_decode(json_encode($friendsList));
+
+
+        // Get Favorite List of Opened Profile
+        $profile_id = User::getUserId($username);
+        $favorite_ids = Favorite::select('favorite_id')->where('user_id',$profile_id)->get();
+        $favorite_ids = array_flatten(json_decode(json_encode($favorite_ids),true));
+
+        $favoriteList = User::with('details')->with('photos')->whereIn('id',$favorite_ids)->orderBy('id','Desc')->get();
+        $favoriteList = json_decode(json_encode($favoriteList));
+        //echo "<pre>"; print_r($favoriteList); die;
+
+        return view('users.profile')->with(compact('userDetails','friendrequest','friendsList','favorite','favoriteList'));
     }
 
     public function contactProfile(Request $request,$username){
@@ -307,6 +398,94 @@ class UsersController extends Controller
             abort(404);    
         } 
         return view('users.contact')->with(compact('userDetails'));
+    }
+
+    public function addFriend($username){
+        $userCount = User::where('username',$username)->count();
+        if($userCount>0){
+            $user_id = Auth::user()->id;
+            $friend_id = User::getUserId($username);
+            $friend = new Friend;
+            $friend->user_id = $user_id;
+            $friend->friend_id = $friend_id;
+            $friend->save();
+            return redirect()->back();    
+        }else{
+            abort(404);    
+        } 
+    }
+
+    public function addNewFriend($username){
+        $userCount = User::where('username',$username)->count();
+        if($userCount>0){
+            $user_id = Auth::user()->id;
+            $friend_id = User::getUserId($username);
+            
+
+            // Check if already friends or friend request sent
+            $friendsCount1 = Friend::where(['friend_id'=>$friend_id,'user_id'=>$user_id])->count();
+            if($friendsCount1>0){
+                return redirect('profile/'.$username);
+            }
+            $friendsCount2 = Friend::where(['user_id'=>$friend_id,'friend_id'=>$user_id])->count();
+            if($friendsCount2>0){
+                return redirect('profile/'.$username);
+            }
+
+            $friend = new Friend;
+            $friend->user_id = $user_id;
+            $friend->friend_id = $friend_id;
+            $friend->save();
+            return redirect('profile/'.$username);    
+        }else{
+            abort(404);    
+        } 
+    }
+
+    public function addNewFavorite($username){
+        $userCount = User::where('username',$username)->count();
+        if($userCount>0){
+            $user_id = Auth::user()->id;
+            $favorite_id = User::getUserId($username);
+            
+            // Check if already favorite 
+            $favoriteCount = Favorite::where(['favorite_id'=>$favorite_id,'user_id'=>$user_id])->count();
+            if($favoriteCount>0){
+                return redirect('profile/'.$username);
+            }
+
+            $favorite = new Favorite;
+            $favorite->user_id = $user_id;
+            $favorite->favorite_id = $favorite_id;
+            $favorite->save();
+            return redirect('profile/'.$username)->with('flash_message_success','User has been added as Favorite!');    
+        }else{
+            abort(404);    
+        } 
+    }
+
+    public function confirmFriendRequest($username){
+        $user_id = Auth::user()->id;
+        $friend_id = User::getUserId($username);
+        $friendCount = Friend::where(['friend_id'=>$user_id,'user_id'=>$friend_id])->count();
+        if($friendCount>0){
+            Friend::where(['friend_id'=>$user_id,'user_id'=>$friend_id])->update(['accept'=>1]);
+            return redirect()->back();    
+        }else{
+            abort(404);
+        }
+    }
+
+    public function removeFriend($username){
+        $userCount = User::where('username',$username)->count();
+        if($userCount>0){
+            $user_id = Auth::user()->id;
+            $friend_id = User::getUserId($username);
+            Friend::where(['user_id'=>$user_id,'friend_id'=>$friend_id])->delete();
+            return redirect()->back();    
+        }else{
+            abort(404);    
+        } 
     }
 
     public function searchProfile(Request $request){
@@ -335,6 +514,53 @@ class UsersController extends Controller
         /*$responses = json_decode(json_encode($responses));
         echo "<pre>"; print_r($responses); die;*/
         return view('users.responses')->with(compact('responses'));
+    }
+
+    public function friendsRequests(){
+        $user_id = Auth::user()->id;
+        $friendsRequests = Friend::where(['friend_id'=>$user_id,'accept'=>0])->get();
+        $friendsRequests = json_decode(json_encode($friendsRequests));
+        /*echo "<pre>"; print_r($friendsRequests); die;*/
+        return view('users.friends_requests')->with(compact('friendsRequests'));
+    }
+
+    public function friends(){
+        // User Friends List
+        $friend_id = Auth::user()->id;
+        $friendsCount1 = Friend::where(['friend_id'=>$friend_id,'accept'=>1])->count();
+        $friend_ids1 = array();
+        if($friendsCount1>0){
+            $friend_ids1 = Friend::select('user_id')->where(['friend_id'=>$friend_id,'accept'=>1])->get();
+            $friend_ids1 = array_flatten(json_decode(json_encode($friend_ids1),true));
+            /*echo "<pre>"; print_r($friend_ids1);*/
+        }
+        $friendsCount2 = Friend::where(['user_id'=>$friend_id,'accept'=>1])->count();
+        $friend_ids2 = array();
+        if($friendsCount2>0){
+            $friend_ids2 = Friend::select('friend_id')->where(['user_id'=>$friend_id,'accept'=>1])->get();
+            $friend_ids2 = array_flatten(json_decode(json_encode($friend_ids2),true));
+            /*echo "<pre>"; print_r($friend_ids2); die;*/
+        }
+        $friends_ids = array();
+        $friends_ids = array_merge($friend_ids1,$friend_ids2);
+
+        $friendsList = User::with('details')->with('photos')->whereIn('id',$friends_ids)->orderBy('id','Desc')->get();
+        $friendsList = json_decode(json_encode($friendsList));
+        /*echo "<pre>"; print_r($friendsList); die;*/
+        return view('users.friends')->with(compact('friendsList'));
+    }
+
+    public function acceptFriendRequest($sender_id){
+        $receiver_id = Auth::user()->id;
+        Friend::where(['user_id'=>$sender_id,'friend_id'=>$receiver_id])->update(['accept'=>1]);
+        return redirect()->back()->with('flash_message_success','Friend Request successfully Accepted!');
+    }
+
+    public function rejectFriendRequest($sender_id){
+        $receiver_id = Auth::user()->id;
+        Friend::where(['user_id'=>$sender_id,'friend_id'=>$receiver_id])->delete();
+        Friend::where(['user_id'=>$receiver_id,'friend_id'=>$sender_id])->delete();
+        return redirect()->back()->with('flash_message_success','Friend Request successfully Rejected!');
     }
 
     public function updateResponse(Request $request){

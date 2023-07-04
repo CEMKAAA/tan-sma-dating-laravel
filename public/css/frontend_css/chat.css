@@ -1,0 +1,11 @@
+.chat-header
+{
+	text-align: center;
+}
+
+.chat-window
+{
+	height: 350px;
+	border-left: solid 1px lightgray;
+	border-right: solid 1px lightgray;
+}
