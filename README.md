@@ -1,2 +1,2 @@
-# tan-sma-dating-laravel
+# tanisma-dating-laravel
 tanısma evlilik aplikasyonu
